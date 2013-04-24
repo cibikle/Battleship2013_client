@@ -66,48 +66,46 @@ public class BattleshipClient {
    private ChatBox cb;
    private int defactoFireDelay;
    private boolean connectionEstablished = false;
-   
    private String username;
    private int proposedNumPlayers;
 
 //------MAIN------//
    public static void main(String[] args) {
-      
    }
-   
+
    public BattleshipClient() {
       msgQueue = new ConcurrentLinkedQueue<ClientMessage>();
-      cgui = new ClientGUI(new MouseFireListener());
+      cgui = new ClientGUI(new MouseFireListener(), new FireListener());
       cb = new ChatBox(new PostListener());
    }
-   
+
 //------QUEUE-HANDLER------//
    private void queueHandler() {
-      while(true) {
+      while (true) {
          ClientMessage cm = msgQueue.poll();
-         while(cm != null) {
-            if(cm.code.startsWith(""+PLAYER_MESSAGE.charAt(0))) {//MSGs
+         while (cm != null) {
+            if (cm.code.startsWith("" + PLAYER_MESSAGE.charAt(0))) {//MSGs
                msgAckHandler(cm);
-            } else if(cm.code.startsWith(""+ACK_FIR_HIT.charAt(0))) {//FIRs
+            } else if (cm.code.startsWith("" + ACK_FIR_HIT.charAt(0))) {//FIRs
                firAckHandler(cm);
-            } else if(cm.code.startsWith(""+ACK_CONNECTION.charAt(0))) {//connection
+            } else if (cm.code.startsWith("" + ACK_CONNECTION.charAt(0))) {//connection
                connectionAckHandler(cm);
-            } else if(cm.code.startsWith(""+ACK_ELO_ACCEPT.charAt(0))) {//ELOs
+            } else if (cm.code.startsWith("" + ACK_ELO_ACCEPT.charAt(0))) {//ELOs
                eloAckHandler(cm);
-            } else if(cm.code.startsWith(""+SHIP_HIT.charAt(0))) {//SHIP attacked
+            } else if (cm.code.startsWith("" + SHIP_HIT.charAt(0))) {//SHIP attacked
                attackedHandler(cm);
-            } else if(cm.code.startsWith(""+START_GAME.charAt(0))) {//Start game
+            } else if (cm.code.startsWith("" + START_GAME.charAt(0))) {//Start game
                startGameHandler(cm);
-            } else if(cm.code.startsWith(""+ACK_BYE.charAt(0))) {//BYEs
+            } else if (cm.code.startsWith("" + ACK_BYE.charAt(0))) {//BYEs
                byeAckHandler(cm);
             } else {//Uh-oh
                //error 
-               System.out.println("error, invalid:"+cm.code);
+               System.out.println("error, invalid:" + cm.code);
             }
          }
       }
    }
-   
+
    private void msgAckHandler(ClientMessage c) {
       if (c.code.equals(SYSTEM_MESSAGE)) {
          connectedPlayers = Integer.parseInt(c.args[1]);
@@ -116,21 +114,21 @@ public class BattleshipClient {
       String msg = c.args[0];
 
       System.out.println(msg);
-      
+
       cb.postRecieved(msg);
    }
-   
+
    private void firAckHandler(ClientMessage c) {
       String rowCol = c.args[0] + c.args[1];
-      if(c.code.equals(ACK_FIR_MISS)) {
+      if (c.code.equals(ACK_FIR_MISS)) {
          cgui.getOceanDisplay().mapMiss(rowCol, true);
-      } else if(c.code.equals(ACK_FIR_SELFHIT)) {
+      } else if (c.code.equals(ACK_FIR_SELFHIT)) {
          //no action
       } else {//hit or sunk ship--no actual differnce
          cgui.getOceanDisplay().mapHit(rowCol, true);
       }
    }
-   
+
    private void connectionAckHandler(ClientMessage c) {
       if (c.code.equals(ACK_CONNECTION)) {
          System.out.println("Connection established.");
@@ -143,64 +141,59 @@ public class BattleshipClient {
          }
       }
    }
-   
+
    private void eloAckHandler(ClientMessage c) {
-      if(c.code.equals(ACK_ELO_ACCEPT)) {
+      if (c.code.equals(ACK_ELO_ACCEPT)) {
          System.out.println("Handshake successful.");
          numberOfPlayers = Integer.parseInt(c.args[0]);
          firingDelay = Integer.parseInt(c.args[1]);
          numberOfShips = Integer.parseInt(c.args[2]);
          numberOfShipsRemaining = numberOfShips;
          String ships = "";
-         for(int i = 3; i < c.args.length; i++) {
+         for (int i = 3; i < c.args.length; i++) {
             ships += c.args[i];
-            if(i%2==1) {
+            if (i % 2 == 1) {
                ships += ":";
             } else {
                ships += "/";
             }
          }
          cgui.placeShips(ships);
-      } else if(c.code.equals(ACK_ELO_REJECT_NAMETAKEN)) {
+      } else if (c.code.equals(ACK_ELO_REJECT_NAMETAKEN)) {
 //prompt the user for a new name
       } else {//no room/game started already
 //inform the user
       }
    }
-   
+
    private void attackedHandler(ClientMessage c) {
       String rowCol = c.args[0] + c.args[1];
-      if(c.code.equals(SHIPS_SUNK_ALL)) {//separate because this will stop the player shooting
+      if (c.code.equals(SHIPS_SUNK_ALL)) {//separate because this will stop the player shooting
          cgui.getOceanDisplay().mapHit(rowCol, true);
          //stop the player from shooting
          //todo
       } else {//hit, sunk
          cgui.getOceanDisplay().mapHit(rowCol, true);
-         
+
          if (c.code.equals(SHIP_SUNK)) {
             numberOfShipsRemaining--;
          }
       }
    }
-   
+
    private void startGameHandler(ClientMessage c) {
-      
    }
-   
+
    private void byeAckHandler(ClientMessage c) {
-      if(c.code.equals(ACK_BYE)) {
-         
-      } else if(c.code.equals(GAMEOVER_PLAYERSLEFT)) {
-         
+      if (c.code.equals(ACK_BYE)) {
+      } else if (c.code.equals(GAMEOVER_PLAYERSLEFT)) {
       } else {//gameover--someone won
-         
       }
    }
-   
+
    private void handleFire(String rowColumn) {
-      
    }
-   
+
    private void sendMsgToServer(String msg) {
       try {
          receptionist.sendMessageToServer(msg);
@@ -208,66 +201,67 @@ public class BattleshipClient {
          Logger.getLogger(BattleshipClient.class.getName()).log(Level.SEVERE, null, ex);
       }
    }
-   
+
 //------LISTENER CLASS------//
    private final class Listener implements Runnable {
+
       Socket socket;
       BufferedReader fromServer;
       DataOutputStream toServer;
       boolean run = true;
-      
+
       @Override
       public void run() {
          String input;
          ClientMessage cm;
-         while(run) {
+         while (run) {
             try {
                input = listenToServer().trim();
             } catch (IOException ex) {
                Logger.getLogger(BattleshipClient.class.getName()).log(Level.SEVERE, null, ex);
                input = "";
             }
-            
+
             cm = parseInput(input);
-            if(cm != null) {
+            if (cm != null) {
                addClientMessageToQueue(cm);
             }
          }
-         
+
       }
-      
+
       private ClientMessage parseInput(String input) {
          int posOfSpace = input.indexOf(" ");
          String code;
          String arguments = "";
-         if(posOfSpace == lengthOfCmds) {
+         if (posOfSpace == lengthOfCmds) {
             code = input.substring(0, posOfSpace);
             arguments = input.substring(posOfSpace);
          } else {
             code = input;
          }
-         
+
          String[] args;
-         if(!arguments.equals("")) {
-            arguments = arguments.replace("\\"+SEPARATOR_TOKEN, "\\"+TEMP_TOKEN);
+         if (!arguments.equals("")) {
+            arguments = arguments.replace("\\" + SEPARATOR_TOKEN, "\\" + TEMP_TOKEN);
             args = arguments.split(SEPARATOR_TOKEN);
-            for(int i = 0; i < args.length; i++) {
-               args[i] = args[i].replace("\\"+TEMP_TOKEN, SEPARATOR_TOKEN);
+            for (int i = 0; i < args.length; i++) {
+               args[i] = args[i].replace("\\" + TEMP_TOKEN, SEPARATOR_TOKEN);
             }
          } else {
             args = null;
          }
-         
+
          return new ClientMessage(code, args);
       }
-      
+
       private void addClientMessageToQueue(ClientMessage cm) {
          msgQueue.add(cm);
-         synchronized(msgQueue) {
+         synchronized (msgQueue) {
             msgQueue.notify();
          }
       }
-      
+
       public void sendMessageToServer(String msg) throws IOException {
          //System.out.println("msg:"+msg);
          if (!msg.endsWith(CRLF)) {
@@ -277,7 +271,7 @@ public class BattleshipClient {
             toServer.writeBytes(msg);
          }
       }
-      
+
       public String listenToServer() throws IOException {
          if (!socket.isClosed()) {
             return fromServer.readLine();
@@ -285,7 +279,7 @@ public class BattleshipClient {
          return null;
       }
    }
-   
+
 //------CLIENT MESSAGE CLASS------//
    private final class ClientMessage {
 
@@ -296,10 +290,10 @@ public class BattleshipClient {
          this.code = code;
          this.args = args;
       }
-      
+
       public String toString() {
          String x = code;
-         for(String s : args) {
+         for (String s : args) {
             x += " " + s;
          }
          return x;
@@ -346,6 +340,29 @@ public class BattleshipClient {
       }
 
       public MouseFireListener() {
+      }
+   }
+
+//------FIRE LISTENER------//
+   public class FireListener implements ActionListener {
+
+      public FireListener() {
+      }
+
+      @Override
+      public void actionPerformed(ActionEvent e) {
+
+         String row = cgui.getCmdPanel().getRowEntry().getText();
+         row = row.trim();
+
+
+         String column = cgui.getCmdPanel().getColumnEntry().getText();
+         column = column.trim();
+
+         String rowColumn = row + column;
+
+         //clientGUI.analyzeShot(rowColumn);
+         //TODO: replace with BSC-scope method
       }
    }
 
