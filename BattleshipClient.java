@@ -5,8 +5,13 @@
 //04/24/13
 package battleshipclient;
 
+import java.awt.Dimension;
+import java.awt.GridLayout;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.BufferedReader;
@@ -16,6 +21,11 @@ import java.net.Socket;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
 
 public class BattleshipClient {
    /* CODES */
@@ -59,24 +69,31 @@ public class BattleshipClient {
    private int numberOfShips;
    private int numberOfShipsRemaining;
    private final ConcurrentLinkedQueue<ClientMessage> msgQueue;
-   private Listener receptionist;
+   private ServerIntf receptionist;
    private Thread receptionistThread;
    private boolean gameStarted = false;
    private ClientGUI cgui;
    private ChatBox cb;
-   private int defactoFireDelay;
+   private int actualFiringDelay;
    private boolean connectionEstablished = false;
    private String username;
    private int proposedNumPlayers;
-
+   private String host;
+   
 //------MAIN------//
    public static void main(String[] args) {
+      
+      BattleshipClient c = new BattleshipClient();
    }
 
    public BattleshipClient() {
       msgQueue = new ConcurrentLinkedQueue<ClientMessage>();
-      cgui = new ClientGUI(new MouseFireListener(), new FireListener());
-      cb = new ChatBox(new PostListener());
+      //cgui = new ClientGUI(new MouseFireListener(), new FireListener());
+      //cgui.setDefaultCloseOperation(close());
+      //cb = new ChatBox(new PostListener());
+      //cb.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+      
+      SignInWindow siw = new SignInWindow();
    }
 
 //------QUEUE-HANDLER------//
@@ -133,12 +150,7 @@ public class BattleshipClient {
       if (c.code.equals(ACK_CONNECTION)) {
          System.out.println("Connection established.");
          String msg = ELO + " " + username + SEPARATOR_TOKEN + proposedNumPlayers;
-         try {
-            receptionist.sendMessageToServer(msg);
-            System.out.println("Handshake dispatched.");
-         } catch (IOException ex) {
-            Logger.getLogger(BattleshipClient.class.getName()).log(Level.SEVERE, null, ex);
-         }
+         sendMsgToServer(msg);
       }
    }
 
@@ -177,11 +189,13 @@ public class BattleshipClient {
 
          if (c.code.equals(SHIP_SUNK)) {
             numberOfShipsRemaining--;
+            actualFiringDelay = firingDelay / numberOfShipsRemaining;
          }
       }
    }
 
    private void startGameHandler(ClientMessage c) {
+      gameStarted = true;
    }
 
    private void byeAckHandler(ClientMessage c) {
@@ -192,8 +206,20 @@ public class BattleshipClient {
    }
 
    private void handleFire(String rowColumn) {
+      if (inbounds(rowColumn)) {
+         sendMsgToServer(FIR + " " + rowColumn.charAt(0) + SEPARATOR_TOKEN + rowColumn.substring(1));
+      }
    }
+   
+   private boolean inbounds(String rowColPair) {
+      int[] parsed = OceanDisplay.translateRowAndColumn(rowColPair);
 
+      if (parsed[0] < 0 || parsed[0] >= OceanDisplay.rows || parsed[1] < 0 || parsed[1] >= OceanDisplay.columns) {
+         return false;
+      }
+      return true;
+   }
+   
    private void sendMsgToServer(String msg) {
       try {
          receptionist.sendMessageToServer(msg);
@@ -203,7 +229,7 @@ public class BattleshipClient {
    }
 
 //------LISTENER CLASS------//
-   private final class Listener implements Runnable {
+   private final class ServerIntf implements Runnable {
 
       Socket socket;
       BufferedReader fromServer;
@@ -280,6 +306,102 @@ public class BattleshipClient {
       }
    }
 
+//------SIGN-IN WINDOW CLASS------//
+   private final class SignInWindow extends JFrame {
+      int maxLenIP = 10;
+      int lenPortNum = 3;
+      int lenPlayers = 2;
+      JTextField hostField = new JTextField(maxLenIP);
+      JTextField portField = new JTextField(lenPortNum);
+      JTextField nicknameField = new JTextField(maxLenIP);
+      JTextField gamesizeField = new JTextField(lenPlayers);
+      JLabel hostLabel = new JLabel("Server Address:");
+      JLabel portLabel = new JLabel("Port Number:");
+      JLabel nicknameLabel = new JLabel("Nickname:");
+      JLabel gamesizeLabal = new JLabel("Number of players:");
+      JButton connectButton = new JButton("connect");
+      JButton quitButton = new JButton("cancel & quit");
+      
+      public SignInWindow() {
+         setTitle("Welcome to Battleship");
+         add(buildPanel());
+         
+         pack();
+         setDefaultCloseOperation(EXIT_ON_CLOSE);
+         setAlwaysOnTop(true);
+         centerOnScreen();
+         setVisible(true);
+      }
+      
+      private int x() {
+         return 7;
+      }
+      
+      private JPanel buildPanel() {
+         JPanel panel = new JPanel(new GridLayout(3, 1));
+         
+         JPanel serverPanel = new JPanel();
+         serverPanel.add(hostLabel);
+         serverPanel.add(hostField);
+         serverPanel.add(portLabel);
+         serverPanel.add(portField);
+         
+         JPanel userPanel = new JPanel();
+         userPanel.add(nicknameLabel);
+         userPanel.add(nicknameField);
+         userPanel.add(gamesizeLabal);
+         userPanel.add(gamesizeField);
+         
+         
+         
+         panel.add(serverPanel);
+         panel.add(userPanel);
+         panel.add(buildButtonPanel());
+         
+         return panel;
+      }
+      
+      private JPanel buildButtonPanel() {
+         JPanel buttonPanel = new JPanel();
+         buttonPanel.add(quitButton);
+         buttonPanel.add(connectButton);
+         
+         return buttonPanel;
+      }
+      
+      private void centerOnScreen() {
+         Toolkit toolkit = Toolkit.getDefaultToolkit();
+         Dimension screenSize = toolkit.getScreenSize();
+         int x = (screenSize.width - getWidth()) / 2;
+         int y = (screenSize.height - getHeight()) / 2;
+         setLocation(x, y);
+      }
+      
+      private class connectButtonListener implements ActionListener, KeyListener {
+
+         @Override
+         public void actionPerformed(ActionEvent ae) {
+            throw new UnsupportedOperationException("Not supported yet.");
+         }
+
+         @Override
+         public void keyTyped(KeyEvent ke) {
+            throw new UnsupportedOperationException("Not supported yet.");
+         }
+
+         @Override
+         public void keyPressed(KeyEvent ke) {
+            throw new UnsupportedOperationException("Not supported yet.");
+         }
+
+         @Override
+         public void keyReleased(KeyEvent ke) {
+            throw new UnsupportedOperationException("Not supported yet.");
+         }
+         
+      }
+   }
+   
 //------CLIENT MESSAGE CLASS------//
    private final class ClientMessage {
 
@@ -291,6 +413,7 @@ public class BattleshipClient {
          this.args = args;
       }
 
+      @Override
       public String toString() {
          String x = code;
          for (String s : args) {
@@ -322,11 +445,8 @@ public class BattleshipClient {
       @Override
       public void mouseEntered(MouseEvent e) {
          OceanTile enteredTile = (OceanTile) e.getSource();
-
          String row = enteredTile.getYCoordinate();
          String col = Integer.toString(enteredTile.getXCoordinate());
-
-
          cgui.getCmdPanel().setRowEntry(row);
          cgui.getCmdPanel().setColumnEntry(col);
       }
@@ -361,8 +481,7 @@ public class BattleshipClient {
 
          String rowColumn = row + column;
 
-         //clientGUI.analyzeShot(rowColumn);
-         //TODO: replace with BSC-scope method
+         handleFire(rowColumn);
       }
    }
 
