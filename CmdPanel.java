@@ -1,7 +1,7 @@
 package battleshipclient;
 
-import javax.swing.*;
 import java.awt.event.*;
+import javax.swing.*;
 
 public class CmdPanel extends JPanel {
 
@@ -60,7 +60,7 @@ public class CmdPanel extends JPanel {
       fireBtn.addActionListener(btnListener);
       add(fireBtn);
 
-      debuggerMessage = new JTextField("Debug info goes here");
+      debuggerMessage = new JTextField("Debug info goes here", 20);
       debuggerMessage.setEditable(false);
 
       add(debuggerMessage);
