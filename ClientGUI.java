@@ -26,51 +26,6 @@ public class ClientGUI extends JFrame {
       return cmdPanel;
    }
 
-/*   //Should be called by a message from server
-//   public void setFiringDelay(String message) {
-//      //message = message.trim();
-//      //firingDelay = Integer.parseInt( message );
-//      firingDelay = 1000;
-//   }
-//
-//   public void callShot(String rowColPair) {
-//      System.out.println("rowCol from callShot:" + rowColPair);
-//
-//      if (!inbounds(rowColPair)) {
-//         cmdPanel.setdebuggerMessage("Coordinates out of bounds or pointed at one of your own ships");
-//
-//         return;
-//      }
-//
-//      if (!shipsWipedOut) {
-//         long curTime = new Date().getTime();
-//         if (lastFiredTime + firingDelay <= curTime) {
-//            String message = "FIR " + rowColPair + CRLF;
-//            String response = "100 And this would be the response.";
-//            response = response.substring(0, 3);
-//            try {
-//               if (Integer.parseInt(response) == 100) {
-//                  oceanDisplay.mapMiss(rowColPair, true);
-//                  cmdPanel.setdebuggerMessage("Miss");
-//               } else if (Integer.parseInt(response) == 150 || Integer.parseInt(response) == 190) {
-//                  oceanDisplay.mapHit(rowColPair, true);
-//                  cmdPanel.setdebuggerMessage("Hit");
-//                  scorePanel.incScore();
-//               }
-//            } catch (NumberFormatException nfe) {
-//               System.err.println("Received the following bad response: " + response);
-//               nfe.printStackTrace();
-//            }
-//            lastFiredTime = curTime;
-//         } else {
-//            cmdPanel.setdebuggerMessage("Firing delay in effect; please wait " + (((lastFiredTime + firingDelay) - curTime) / 1000) + " seconds.");
-//         }
-//      } else {
-//         cmdPanel.setdebuggerMessage("You have no ships left to fire with.");
-//      }
-//
-//   }*/
-
    //Should be called once you've got a message from server
    public void placeShips(String shipLocations) {
       System.out.println(shipLocations);
