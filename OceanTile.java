@@ -34,6 +34,11 @@ public class OceanTile extends JPanel {
          g.setColor(Color.white);
          g.drawString(s, 5, 15);
       }
+      if (ship) {
+         g.setColor(Color.GRAY);
+         Dimension dim = getSize();
+         g.fillRect(0, 0, dim.width, dim.height);
+      }
       if (hit) {
          g.setColor(Color.RED);
          g.fillArc(5, 5, 15, 15, 0, 360);
@@ -41,11 +46,6 @@ public class OceanTile extends JPanel {
       if (miss) {
          g.setColor(Color.WHITE);
          g.fillArc(5, 5, 15, 15, 0, 360);
-      }
-      if (ship) {
-         g.setColor(Color.GRAY);
-         Dimension dim = getSize();
-         g.fillRect(0, 0, dim.width, dim.height);
       }
    }
 
