@@ -19,7 +19,7 @@ public class ScorePanel extends JPanel {
 
    public void setScore(int n) {
       score = n;
-      label.setText(score + "");
+      label.setText(msg + score);
    }
 
    public void resetScore() {
