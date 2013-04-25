@@ -1,7 +1,6 @@
 package battleshipclient;
 
 import java.awt.BorderLayout;
-import java.util.Date;
 import javax.swing.*;
 
 public class ClientGUI extends JFrame {
@@ -71,15 +70,6 @@ public class ClientGUI extends JFrame {
 //      }
 //
 //   }*/
-
-   private boolean inbounds(String rowColPair) {
-      int[] parsed = OceanDisplay.translateRowAndColumn(rowColPair);
-
-      if (parsed[0] < 0 || parsed[0] >= OceanDisplay.rows || parsed[1] < 0 || parsed[1] >= OceanDisplay.columns) {
-         return false;
-      }
-      return true;
-   }
 
    //Should be called once you've got a message from server
    public void placeShips(String shipLocations) {
