@@ -10,11 +10,11 @@ public class OceanDisplay extends JPanel {
    public static final int hgap = 1;
    public static final int vgap = 1;
    private OceanTile ocean[][];
+   static String rowLabels = " ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
    public OceanDisplay(BattleshipClient.MouseFireListener listener) {
 
-      String rowLabels = " ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-
+      
       setLayout(new GridLayout(rows, columns, hgap, vgap));
       ocean = new OceanTile[rows][columns];
       for (int i = 0; i < rows; i++) {
@@ -36,51 +36,40 @@ public class OceanDisplay extends JPanel {
    }
 
    public void mapHit(String rowCol, boolean choice) {
-      System.out.println(rowCol);
-      rowCol = rowCol.trim();
-      char row = rowCol.charAt(0);
-      String col = rowCol.substring(1);
-      row = Character.toUpperCase(row);
-      int rowIdx = (row - 'A') + 1; // skip the header
-      int colIdx = Integer.valueOf(col); // skip the header
-      ocean[rowIdx][colIdx].setHit(choice);
+      System.out.println("rowCol " + rowCol);
+
+      int[] parsed = parseRowCol(rowCol);
+
+      System.out.println(parsed[0] + " " + parsed[1]);
+
+      ocean[parsed[0]][parsed[1]].setHit(choice);
       repaint();
    }
 
    public void mapMiss(String rowCol, boolean choice) {
-      System.out.println(rowCol);
-      rowCol = rowCol.trim();
-      char row = rowCol.charAt(0);
-      String col = rowCol.substring(1);
-      row = Character.toUpperCase(row);
-      int rowIdx = (row - 'A') + 1; // skip the header
-      int colIdx = Integer.valueOf(col); // skip the header
-      ocean[rowIdx][colIdx].setMiss(choice);
+      int[] parsed = parseRowCol(rowCol);
+      ocean[parsed[0]][parsed[1]].setMiss(choice);
       repaint();
    }
 
    public void mapShip(String rowCol, boolean choice) {
+      int[] parsed = parseRowCol(rowCol);
+      ocean[parsed[0]][parsed[1]].setShip(choice);
+      repaint();
+   }
+
+   public static int[] parseRowCol(String rowCol) {
+      System.out.println(rowCol);
 
       rowCol = rowCol.trim();
       char row = rowCol.charAt(0);
       String col = rowCol.substring(1);
       row = Character.toUpperCase(row);
-      System.out.println(rowCol);
-      int rowIdx = (row - 'A') + 1; // skip the header
+      int rowIdx = rowLabels.indexOf(row); // skip the header
       int colIdx = Integer.valueOf(col); // skip the header
-      ocean[rowIdx][colIdx].setShip(choice);
-      repaint();
-   }
 
-   public static int[] translateRowAndColumn(String rowColumn) {
-      rowColumn = rowColumn.trim();
-      char row = rowColumn.charAt(0);
-      String col = rowColumn.substring(1);
-      row = Character.toUpperCase(row);
-      int rowIdx = (row - 'A') + 1; // skip the header
-      int colIdx = Integer.valueOf(col); // skip the header
-      int[] coordinates = {rowIdx, colIdx};
+      int[] coords = {rowIdx, colIdx};
 
-      return coordinates;
+      return coords;
    }
 }
