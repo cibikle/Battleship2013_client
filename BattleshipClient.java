@@ -241,7 +241,11 @@ public class BattleshipClient {
    private void byeAckHandler(ClientMessage c) {
       if (c.code.equals(ACK_BYE)) {
       } else if (c.code.equals(GAMEOVER_PLAYERSLEFT)) {
+         cb.postRecieved("Game over--other players all left");
+        // siw.setVisible(true);
       } else {//gameover--someone won
+         cb.postRecieved("Game over--"+c.args[0]);
+         //siw.setVisible(true);
       }
    }
 
@@ -492,9 +496,11 @@ public class BattleshipClient {
                players = -1;
             }
 
-            populateServerInfo(h, port, n, players);
-            if (establishConnection()) {
-               siw.setVisible(false);
+            if (players > 0 && port > 0) {
+               populateServerInfo(h, port, n, players);
+               if (establishConnection()) {
+                  siw.setVisible(false);
+               }
             }
          }
       }
